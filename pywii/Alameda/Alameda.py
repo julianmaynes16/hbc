@@ -221,16 +221,17 @@ class TPL(object):
 		elif format == 14:
 			rgba = self.S3TC(data[texHeader.DataOff:], texHeader.Size)
 		else:
-			print 'Unknown texture format', format
+			print('Unknown texture format', format)
 		
 		if rgba == None:
 			rgba = '\0\0\0\0' * texHeader.Size[0] * texHeader.Size[1]
 		
 		image = ImageData(texHeader.Size[1], texHeader.Size[0], 'RGBA', rgba)
-		print format
+		print(format)
 		return image
 	
-	def I4(self, data, (y, x)):
+	def I4(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -258,7 +259,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 	
-	def I8(self, data, (y, x)):
+	def I8(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y*2)]
 		outp = 0
 		inp = 0
@@ -279,7 +281,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 	
-	def IA4(self, data, (y, x)):
+	def IA4(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -302,7 +305,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 	
-	def IA8(self, data, (y, x)):
+	def IA8(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -328,7 +332,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 	
-	def RGB565(self, data, (y, x)):
+	def RGB565(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -354,7 +359,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 
-	def RGB5A3(self, data, (y, x)):
+	def RGB5A3(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -386,7 +392,8 @@ class TPL(object):
 		
 		return ''.join(Struct.uint32(p) for p in out)
 
-	def RGBA8(self, data, (y, x)):
+	def RGBA8(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		outp = 0
 		inp = 0
@@ -427,7 +434,8 @@ class TPL(object):
 			c |= xc<<i
 		return c
 	
-	def S3TC(self, data, (y, x)):
+	def S3TC(self, data, yx_tuple):
+		y, x = yx_tuple
 		out = [0 for i in xrange(x * y)]
 		TILE_WIDTH = 8
 		TILE_HEIGHT = 8
@@ -578,21 +586,21 @@ class ItemList(object):
 		
 		for n,i in enumerate(self.Items):
 			offsets.append(len(data))
-			data += self.pack_item(n,i)
+			data += str(self.pack_item(n,i))
 		
 		listlen = len(self.Items) * self.LSIZE
 		
 		head = self.__mkheader__()
 		outdata = ""
 		if self.IS_ATOM:
-			outdata += self.FOURCC + Struct.uint32((len(extradata) + listlen + len(data) + 8 + len(head) + 3) &(~3), endian='>')
-		outdata += head
+			outdata += self.FOURCC + str(Struct.uint32((len(extradata) + listlen + len(data) + 8 + len(head) + 3) &(~3), endian='>'))
+		outdata += str(head)
 		
 		dataoff = len(outdata) + listlen - self.OFFSET
 		assert dataoff >= 0
 		
 		for n in offsets:
-			outdata += Struct.uint32(n + dataoff, endian='>')
+			outdata += str(Struct.uint32(n + dataoff, endian='>'))
 			if self.LSIZE > 4:
 				outdata += (self.LSIZE-4)*"\x00"
 		
@@ -605,7 +613,7 @@ class ItemList(object):
 		return outdata
 	
 	def __mkheader__(self):
-		return Struct.uint16(len(self.Items), endian='>') + "\x00\x00"
+		return Struct.uint16(len(self.Items), endian='>') + b"\x00\x00"
 	
 	def __unpkcnt__(self, data):
 		return Struct.uint16(data[0:2], endian='>')
@@ -669,7 +677,7 @@ class Brlyt(object):
 		
 		def unpack_item(self, i, data):
 			fn = data.split('\0', 1)[0]
-			print fn
+			print(fn)
 			tex = TPL(self.Archive.Files['./arc/timg/' + fn.lower()]).Textures[0]
 			self.Items.append(Brlyt.BrlytTexture(fn, tex))
 		def pack_item(self, i, item):
@@ -709,20 +717,20 @@ class Brlyt(object):
 			self.m_8 = bool((value>>27) & 1)
 		
 		def show(self):
-			print "Flags: %08x"%self.value
-			print "ReserveGXMem("
-			print " r4        =",self.NumTextures
-			print " r5        =",self.NumCoords
-			print " r6        =",self.m_2
-			print " r7        =",self.m_3
-			print " r8        =",self.m_4
-			print " r9        =",self.m_5
-			print " r10       =",self.m_6
-			print " 0x8(%sp)  =",self.m_7
-			print " 0xC(%sp)  =",self.m_8
-			print " 0x10(%sp) =",self.m_9
-			print " 0x14(%sp) =",self.m_10
-			print ")"
+			print("Flags: %08x"%self.value)
+			print("ReserveGXMem(")
+			print(" r4        =",self.NumTextures)
+			print(" r5        =",self.NumCoords)
+			print(" r6        =",self.m_2)
+			print (" r7        =",self.m_3)
+			print (" r8        =",self.m_4)
+			print (" r9        =",self.m_5)
+			print (" r10       =",self.m_6)
+			print (" 0x8(%sp)  =",self.m_7)
+			print (" 0xC(%sp)  =",self.m_8)
+			print (" 0x10(%sp) =",self.m_9)
+			print (" 0x14(%sp) =",self.m_10)
+			print (")")
 		
 		def pack(self):
 			val = 0
@@ -824,61 +832,61 @@ class Brlyt(object):
 				texid = Struct.uint16(data[ptr:ptr+2], endian='>')
 				texcs = Struct.uint8(data[ptr+2], endian='>')
 				texct = Struct.uint8(data[ptr+3], endian='>')
-				print "  * Texture: %04x %d %d"%(texid,texcs,texct)
+				print("  * Texture: %04x %d %d"%(texid,texcs,texct))
 				self.Textures.append((texid,texcs,texct))
 				ptr += 4
 			for i in range(self.FlagData.NumCoords):
 				dat = []
 				for j in range(5):
 					dat.append(Struct.float(data[ptr+j*4:ptr+j*4+4], endian='>'))
-				print "  * Coords: [",', '.join(["%f"%x for x in dat]),"]"
+				print("  * Coords: [",', '.join(["%f"%x for x in dat]),"]")
 				ptr += 0x14
 				self.TextureCoords.append(dat)
 			for i in range(self.FlagData.m_2):
 				dat = Struct.uint32(data[ptr:ptr+4], endian='>')
 				self.SthB.append(dat)
-				print "  * SthB: %08x"%dat
+				print("  * SthB: %08x"%dat)
 				ptr += 0x04
 			if self.FlagData.m_7:
 				self.SthI = Struct.uint32(data[ptr:ptr+4], endian='>')
-				print "  SthI: %08x"%self.SthI
+				print("  SthI: %08x"%self.SthI)
 				ptr += 0x04
 			if self.FlagData.m_8:
 				self.SthJ = Struct.uint32(data[ptr:ptr+4], endian='>')
-				print "  SthJ: %08x"%self.SthJ
+				print("  SthJ: %08x"%self.SthJ)
 				ptr += 0x04
 			if self.FlagData.m_4:
 				self.SthC = Struct.uint32(data[ptr:ptr+4], endian='>')
-				print "  SthC: %08x"%self.SthC
+				print ("  SthC: %08x"%self.SthC)
 				ptr += 0x04
 			for i in range(self.FlagData.m_6):
 				dat = []
 				for j in range(5):
 					dat.append(Struct.float(data[ptr+j*4:ptr+j*4+4], endian='>'))
 				self.SthD.append(dat)
-				print "  * SthD: [",', '.join(["%f"%x for x in dat]),"]"
+				print("  * SthD: [",', '.join(["%f"%x for x in dat]),"]")
 				ptr += 0x14
 			for i in range(self.FlagData.m_5):
 				dat = Struct.uint32(data[ptr:ptr+4], endian='>')
 				self.SthE.append(dat)
-				print "  * SthE: %08x"%dat
+				print("  * SthE: %08x"%dat)
 				ptr += 0x04
 			for i in range(self.FlagData.m_3):
 				dat = []
 				for j in range(4):
 					dat.append(Struct.uint32(data[ptr+j*4:ptr+j*4+4], endian='>'))
 				self.SthF.append(dat)
-				print "  * SthF: [",', '.join(["%08x"%x for x in dat]),"]"
+				print("  * SthF: [",', '.join(["%08x"%x for x in dat]),"]")
 				ptr += 0x10
 			if self.FlagData.m_9:
 				dat = Struct.uint32(data[ptr:ptr+4], endian='>')
 				self.SthG = dat
-				print "  SthG: %08x"%dat
+				print("  SthG: %08x"%dat)
 				ptr += 0x04
 			if self.FlagData.m_10:
 				dat = Struct.uint32(data[ptr:ptr+4], endian='>')
 				self.SthH = dat
-				print "  SthH: %08x"%dat
+				print ("  SthH: %08x"%dat)
 				ptr += 0x04
 			
 			#assert ptr == len(data)
@@ -913,32 +921,32 @@ class Brlyt(object):
 			data = hdr.pack()
 			
 			for i in self.Textures:
-				data += Struct.uint16(i[0], endian='>')
-				data += Struct.uint8(i[1], endian='>')
-				data += Struct.uint8(i[2], endian='>')
+				data += str(Struct.uint16(i[0], endian='>'))
+				data += str(Struct.uint8(i[1], endian='>'))
+				data += str(Struct.uint8(i[2], endian='>'))
 			for i in self.TextureCoords:
 				for j in i:
-					data += Struct.float(j, endian='>')
+					data += str(Struct.float(j, endian='>'))
 			for i in self.SthB:
-				data += Struct.uint32(i, endian='>')
+				data += str(Struct.uint32(i, endian='>'))
 			if self.SthI is not None:
-				data += Struct.uint32(self.SthI, endian='>')
+				data += str(Struct.uint32(self.SthI, endian='>'))
 			if self.SthJ is not None:
-				data += Struct.uint32(self.SthJ, endian='>')
+				data += str(Struct.uint32(self.SthJ, endian='>'))
 			if self.SthC is not None:
-				data += Struct.uint32(self.SthC, endian='>')
+				data += str(Struct.uint32(self.SthC, endian='>'))
 			for i in self.SthD:
 				for j in i:
-					data += Struct.float(j, endian='>')
+					data += str(Struct.float(j, endian='>'))
 			for i in self.SthE:
-				data += Struct.uint32(i, endian='>')
+				data += str(Struct.uint32(i, endian='>'))
 			for i in self.SthF:
 				for j in i:
-					data += Struct.uint32(j, endian='>')
+					data += str(Struct.uint32(j, endian='>'))
 			if self.SthG is not None:
-				data += Struct.uint32(self.SthG, endian='>')
+				data += str(Struct.uint32(self.SthG, endian='>'))
 			if self.SthH is not None:
-				data += Struct.uint32(self.SthH, endian='>')
+				data += str(Struct.uint32(self.SthH, endian='>'))
 			return data
 		
 	class BrlytPAN1(StdAtom):
@@ -979,13 +987,13 @@ class Brlyt(object):
 		pos = 0
 		header = self.BrlytHeader()
 		header.unpack(data[:len(header)])
-		print "BRLYT header:"
+		print ("BRLYT header:")
 		wii.chexdump(data[:len(header)])
-		print " unk1: %08x"%header.Unk
-		print " unkc: %08x"%header.UnkCount
+		print (" unk1: %08x"%header.Unk)
+		print (" unkc: %08x"%header.UnkCount)
 		pos += len(header)
 		
-		print " %d atoms"%header.AtomCount
+		print (" %d atoms"%header.AtomCount)
 		
 		assert header.Magic == 'RLYT'
 		
@@ -1011,7 +1019,7 @@ class Brlyt(object):
 			elif atom.FourCC == "grp1":
 				self.GRP1(atomdata)
 			else:
-				print "Unknown FOURCC:",atom.FourCC
+				print ("Unknown FOURCC:",atom.FourCC)
 				wii.chexdump(atomdata)
 			
 			pos += atom.Size
@@ -1098,7 +1106,7 @@ class Brlyt(object):
 		lyt1.unpack(data)
 		self.Width = lyt1.Width
 		self.Height = lyt1.Height
-		print "LYT1: %f x %f, flag %d"%(self.Width, self.Height, lyt1.Flag)
+		print("LYT1: %f x %f, flag %d"%(self.Width, self.Height, lyt1.Flag))
 		self.Renderer.Create(int(self.Width), int(self.Height))
 
 	def TXL1(self, data):
@@ -1107,8 +1115,8 @@ class Brlyt(object):
 			i.create_texture()
 	
 	def ApplyMask(self, image, mask):
-		print "Making mask:",image,mask
-		print image.width,image.height,mask.width,mask.height
+		print("Making mask:",image,mask)
+		print(image.width,image.height,mask.width,mask.height)
 		if image.height != mask.height or image.width != mask.width:
 			raise ValueError("Mask dimensions must be equal to mask dimensions")
 		newdata = [0 for x in xrange(image.height * image.width * 4)]
@@ -1137,7 +1145,7 @@ class Brlyt(object):
 		pane = Brlyt.BrlytPAN1()
 		pane.unpack(data)
 		p = Pane(pane.Name.split('\0',1)[0], pane.Flags, pane.Alpha/256.0, pane.Coords)
-		print 'Pane %s (flags %04x, alpha %f): ' % (p.Name, pane.Flags, pane.Alpha),pane.Coords
+		print('Pane %s (flags %04x, alpha %f): ' % (p.Name, pane.Flags, pane.Alpha),pane.Coords)
 		self._addpane(p)
 	
 	def PAS1(self, data):
@@ -1145,11 +1153,11 @@ class Brlyt(object):
 		if self.CurPane is None:
 			raise ValueError("No current pane!")
 		self.PanePath.append(self.CurPane)
-		print "Pane start:",'.'.join(map(str,self.PanePath))
+		print("Pane start:",'.'.join(map(str,self.PanePath)))
 		self.CurPane = None
 	
 	def PAE1(self, data):
-		print "Pane end:",'.'.join(map(str,self.PanePath))
+		print("Pane end:",'.'.join(map(str,self.PanePath)))
 		self.PanePath = self.PanePath[:-1]
 	
 	def PIC1(self, data):
@@ -1159,14 +1167,14 @@ class Brlyt(object):
 		mc = []
 		for i in range(4):
 			mc.append(pic.MaterialCoords[i*2:i*2+2])
-		print mc
+		print(mc)
 		p = Picture(pic.Name.split("\0",1)[0], pic.Flags, pic.Alpha/256.0, pic.Coords, pic.unk, pic.Material, pic.Flags2, mc)
-		print repr(p.Name)
+		print(repr(p.Name))
 		mat = self.Materials[pic.Material]
 		if mat is not None:
 			self._addpane(p)
 		else:
-			print 'Picture %s with null material!'
+			print('Picture %s with null material!')
 		
 	def GRP1(self, data):
 		wii.chexdump(data)
@@ -1231,7 +1239,7 @@ class Brlan(object):
 			if atom.FourCC == 'pai1':
 				self.PAI1(atomdata)
 			else:
-				print "Unknown animation atom: %s"%atom.FourCC
+				print("Unknown animation atom: %s"%atom.FourCC)
 	
 	class BrlanPAI1(ItemList):
 		LSIZE=4
@@ -1240,7 +1248,7 @@ class Brlan(object):
 		HDRLEN=12
 		def unpack(self, data):
 			self.FrameCount = Struct.uint16(data[8:10], endian='>')
-			print self.FrameCount
+			print(self.FrameCount)
 			ItemList.unpack(self, data)
 		def __mkheader__(self):
 			hdr = Struct.uint16(self.FrameCount, endian='>')
@@ -1293,11 +1301,11 @@ class Brlan(object):
 				ItemList.__init__(self, data)
 		def unpack(self, data):
 			self.Name = data[:0x14].split("\0",1)[0]
-			print self.Name
+			print(self.Name)
 			ItemList.unpack(self, data)
 		def __mkheader__(self):
 			hdr = self.Name + "\x00" * (0x14-len(self.Name))
-			hdr += Struct.uint8(len(self.Items), endian='>')
+			hdr += str(Struct.uint8(len(self.Items), endian='>'))
 			hdr += "\x00\x00\x00"
 			return hdr
 		def __unpkcnt__(self, data):
@@ -1345,11 +1353,11 @@ class Brlan(object):
 				ItemList.__init__(self, data)
 		def unpack(self, data):
 			self.Type = data[0:4]
-			print " ",self.Type
+			print(" ",self.Type)
 			ItemList.unpack(self, data)
 		def __mkheader__(self):
 			hdr = self.Type
-			hdr += Struct.uint8(len(self.Items), endian='>')
+			hdr += str(Struct.uint8(len(self.Items), endian='>'))
 			hdr += "\x00\x00\x00"
 			return hdr
 		def __unpkcnt__(self, data):
@@ -1383,18 +1391,18 @@ class Brlan(object):
 			self.Unk = Struct.uint16(data[2:4], endian='>')
 			count = Struct.uint16(data[4:6], endian='>')
 			pos = Struct.uint32(data[8:12], endian='>')
-			print "  ",self.Type
+			print("  ",self.Type)
 			if self.Unk == 0x200:
-				print "      Triplets:"
+				print("      Triplets:")
 				for i in range(count):
 					F = Struct.float(data[pos+0:pos+4], endian='>')
 					P = Struct.float(data[pos+4:pos+8], endian='>')
 					D = Struct.float(data[pos+8:pos+12], endian='>')
-					print "         %11f %11f %11f"%(F,P,D)
+					print("         %11f %11f %11f"%(F,P,D))
 					self.Triplets.append((F,P,D))
 					pos += 12
 			else:
-				print "      Unknown format: %04x"%self.Unk
+				print("      Unknown format: %04x"%self.Unk)
 		def pack(self, offset):
 			self.Triplets.sort(key=lambda x: x[0])
 			t = self.Triplets
@@ -1411,7 +1419,7 @@ class Brlan(object):
 			out = Struct.uint16(self.Type, endian='>')
 			out += Struct.uint16(self.Unk, endian='>')
 			out += Struct.uint16(len(self.Triplets), endian='>')
-			out += "\x00\x00"
+			out += b"\x00\x00"
 			out += Struct.uint32(0xc, endian='>')
 			for F,P,D in self.Triplets:
 				out += Struct.float(F-offset, endian='>')
@@ -1511,7 +1519,7 @@ class Renderer(object):
 	def Create(self, width, height):
 		self.Width = width
 		self.Height = height
-		print "Render: %f x %f"%(self.Width,self.Height)
+		print("Render: %f x %f"%(self.Width,self.Height))
 		self.Window = BannerWindow(self.Width, self.Height)
 		self.Window.set_exclusive_mouse(False)
 		
@@ -1647,8 +1655,8 @@ class Renderer(object):
 
 	def MainLoop(self, loop):
 		frame = 0
-		print "Starting mainloop: loop =",loop
-		print "Length in frames:",self.Brlan.Anim.FrameCount	
+		print("Starting mainloop: loop =",loop)
+		print("Length in frames:",self.Brlan.Anim.FrameCount)	
 		while not self.Window.has_exit:
 			self.Window.dispatch_events()
 			self.Window.clear()
@@ -1667,10 +1675,10 @@ class Renderer(object):
 				self.Animate(frame)
 				if frame >= self.Brlan.Anim.FrameCount:
 					if not loop:
-						print "Animation done!"
+						print("Animation done!")
 						return True
 					else:
-						print "Looping..."
+						print("Looping...")
 						frame = -1
 			frame += 1
 
@@ -1703,7 +1711,7 @@ class Alameda(object):
 			imet.unpack(fp.read(len(imet)))
 			assert imet.IMET == 'IMET'
 		
-		print 'English title: %s' % imet.Names[1]
+		print('English title: %s' % imet.Names[1])
 		
 		
 		root = U8(fp.read())

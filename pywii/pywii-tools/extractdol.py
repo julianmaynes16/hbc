@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
 import sys, os, os.path
 sys.path.append(os.path.realpath(os.path.dirname(sys.argv[0]))+"/../Common")

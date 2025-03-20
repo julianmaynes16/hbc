@@ -34,7 +34,7 @@ class Struct(object):
 	
 	LE = '<'
 	BE = '>'
-	__endian__ = '<'
+	# __endian__ = '<'
 	
 	def __init__(self, func=None, unpack=None, **kwargs):
 		self.__defs__ = []
@@ -43,6 +43,7 @@ class Struct(object):
 		self.__values__ = {}
 		self.__next__ = True
 		self.__baked__ = False
+		self.__endian__ = '<'
 		
 		if func == None:
 			self.__format__()
@@ -275,7 +276,7 @@ class Struct(object):
 					else:
 						values.append(self.__values__[name])
 				
-				ret += struct.pack(self.__endian__+sdef, *values)
+				ret += str(struct.pack(self.__endian__+sdef, *values))
 		return ret
 	
 	def __getitem__(self, value):
@@ -308,7 +309,7 @@ if __name__=='__main__':
 	assert test.hax.thing1 == 0xBEBAFECA
 	assert test.hax.thing2 == 0xCAFEBABE
 	
-	print 'Tests successful'
+	print('Tests successful')
 	
 	"""
 	@Struct.LE

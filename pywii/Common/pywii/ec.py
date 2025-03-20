@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # Copyright 2007,2008  Segher Boessenkool  <segher@kernel.crashing.org>
 # Copyright 2008  Hector Martin  <marcan@marcansoft.com>
 # Licensed under the terms of the GNU GPL, version 2
@@ -32,7 +32,7 @@ except ImportError:
 
 class ByteArray(array):
 	def __new__(cls, initializer=None):
-		return super(ByteArray, cls)	.__new__(cls,'B',initializer)
+		return super(ByteArray, cls)	.__new__(cls,'B',initializer.encode('utf-8'))
 	def __init__(self,initializer=None):
 		array.__init__(self)
 	def __setitem__(self,item,value):
@@ -52,10 +52,13 @@ class ELT_PY:
 	SIZE=(SIZEBITS+7)/8
 	square = ByteArray("\x00\x01\x04\x05\x10\x11\x14\x15\x40\x41\x44\x45\x50\x51\x54\x55")
 	def __init__(self, initializer=None):
-		if isinstance(initializer, long) or isinstance(initializer, int):
+		if isinstance(initializer, int):
 			self.d = ByteArray(long_to_bytes(initializer,self.SIZE))
 		elif isinstance(initializer, str):
-			self.d = ByteArray(initializer)
+			print("Initializer size: " + str(len(initializer)))
+
+			self.d = initializer.encode('utf-8')
+			print(initializer)
 		elif isinstance(initializer, ByteArray):
 			self.d = ByteArray(initializer)
 		elif isinstance(initializer, array):
@@ -67,6 +70,7 @@ class ELT_PY:
 		else:
 			raise TypeError("Invalid initializer type")
 		if len(self.d) != self.SIZE:
+			print("size of d: " + str(len(self.d)))
 			raise ValueError("ELT size must be 30")
 		
 	def __cmp__(self, other):
@@ -304,9 +308,9 @@ def bn_inv(a,N):
 
 
 # order of the addition group of points
-ec_N = bytes_to_long(
-			"\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"+\
-			"\x13\xe9\x74\xe7\x2f\x8a\x69\x22\x03\x1d\x26\x03\xcf\xe0\xd7")
+ec_N_bytes = "\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"+\
+			"\x13\xe9\x74\xe7\x2f\x8a\x69\x22\x03\x1d\x26\x03\xcf\xe0\xd7"
+ec_N = bytes_to_long(ec_N_bytes.encode('utf-8'))
 
 # base point
 ec_G = Point(

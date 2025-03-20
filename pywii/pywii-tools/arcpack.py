@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import sys, os, os.path, struct
-import pywii as wii
+import pywii.wii as wii
 
 fstb = wii.WiiFSTBuilder(0x20)
 
